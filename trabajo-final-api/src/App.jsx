@@ -1,121 +1,123 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useState, useEffect } from 'react'
 import './App.css'
+import PokemonList from './components/PokemonList'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [pokemons, setPokemons] = useState([])
+  const [filteredPokemons, setFilteredPokemons] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [favorites, setFavorites] = useState([])
+  const [blocked, setBlocked] = useState([])
+
+  // Cargar datos guardados del localStorage
+  useEffect(() => {
+    const savedFavorites = JSON.parse(localStorage.getItem('pokemonFavorites')) || []
+    const savedBlocked = JSON.parse(localStorage.getItem('pokemonBlocked')) || []
+    setFavorites(savedFavorites)
+    setBlocked(savedBlocked)
+  }, [])
+
+  // Cargar Pokémon desde la API
+  useEffect(() => {
+    const fetchPokemons = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=50&offset=0')
+        const data = await response.json()
+        
+        const pokemonDetails = await Promise.all(
+          data.results.map(pokemon =>
+            fetch(pokemon.url).then(res => res.json())
+          )
+        )
+        
+        setPokemons(pokemonDetails)
+        setFilteredPokemons(pokemonDetails)
+      } catch (error) {
+        console.error('Error al cargar Pokémon:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPokemons()
+  }, [])
+
+  // Filtrar Pokémon según búsqueda
+  useEffect(() => {
+    const filtered = pokemons.filter(pokemon =>
+      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      !blocked.includes(pokemon.id)
+    )
+    setFilteredPokemons(filtered)
+  }, [searchTerm, pokemons, blocked])
+
+  // Guardar cambios en localStorage
+  useEffect(() => {
+    localStorage.setItem('pokemonFavorites', JSON.stringify(favorites))
+  }, [favorites])
+
+  useEffect(() => {
+    localStorage.setItem('pokemonBlocked', JSON.stringify(blocked))
+  }, [blocked])
+
+  const toggleFavorite = (pokemonId) => {
+    setFavorites(prev =>
+      prev.includes(pokemonId)
+        ? prev.filter(id => id !== pokemonId)
+        : [...prev, pokemonId]
+    )
+  }
+
+  const toggleBlocked = (pokemonId) => {
+    setBlocked(prev =>
+      prev.includes(pokemonId)
+        ? prev.filter(id => id !== pokemonId)
+        : [...prev, pokemonId]
+    )
+  }
+
+  const handleSearch = (value) => {
+    setSearchTerm(value)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header className="app-header">
+        <h1>🔴 PokéDex Manager</h1>
+        <p>Gestiona tus Pokémon favoritos</p>
+      </header>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <main className="app-main">
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Buscar Pokémon..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="search-input"
+          />
+          <span className="result-count">
+            {filteredPokemons.length} Pokémon encontrados
+          </span>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {loading ? (
+          <div className="loading">
+            <p>Cargando Pokémon...</p>
+          </div>
+        ) : (
+          <PokemonList
+            pokemons={filteredPokemons}
+            favorites={favorites}
+            blocked={blocked}
+            onToggleFavorite={toggleFavorite}
+            onToggleBlocked={toggleBlocked}
+          />
+        )}
+      </main>
+    </div>
   )
 }
 
