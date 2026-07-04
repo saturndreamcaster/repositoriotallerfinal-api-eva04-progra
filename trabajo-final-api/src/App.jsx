@@ -9,6 +9,9 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [favorites, setFavorites] = useState([])
   const [blocked, setBlocked] = useState([])
+  const [filterMode, setFilterMode] = useState('all') // all | favorites | blocked
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [availableTypes, setAvailableTypes] = useState([])
 
   // Cargar datos guardados del localStorage
   useEffect(() => {
@@ -34,6 +37,8 @@ function App() {
         
         setPokemons(pokemonDetails)
         setFilteredPokemons(pokemonDetails)
+        const types = Array.from(new Set(pokemonDetails.flatMap(p => p.types.map(t => t.type.name))))
+        setAvailableTypes(types.sort())
       } catch (error) {
         console.error('Error al cargar Pokémon:', error)
       } finally {
@@ -46,12 +51,27 @@ function App() {
 
   // Filtrar Pokémon según búsqueda
   useEffect(() => {
-    const filtered = pokemons.filter(pokemon =>
-      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !blocked.includes(pokemon.id)
-    )
+    const filtered = pokemons.filter(pokemon => {
+      // Excluir bloqueados salvo que estemos viendo "blocked"
+      if (filterMode !== 'blocked' && blocked.includes(pokemon.id)) return false
+
+      // Si pedimos sólo favoritos
+      if (filterMode === 'favorites' && !favorites.includes(pokemon.id)) return false
+
+      // Si pedimos sólo bloqueados
+      if (filterMode === 'blocked' && !blocked.includes(pokemon.id)) return false
+
+      // Filtrar por tipo si se seleccionó uno
+      if (typeFilter !== 'all' && !pokemon.types.some(t => t.type.name === typeFilter)) return false
+
+      // Filtrar por búsqueda de nombre
+      if (!pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())) return false
+
+      return true
+    })
+
     setFilteredPokemons(filtered)
-  }, [searchTerm, pokemons, blocked])
+  }, [searchTerm, pokemons, blocked, favorites, filterMode, typeFilter])
 
   // Guardar cambios en localStorage
   useEffect(() => {
@@ -98,6 +118,30 @@ function App() {
             onChange={(e) => handleSearch(e.target.value)}
             className="search-input"
           />
+
+          <div className="filter-controls">
+            <select
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">Todos</option>
+              <option value="favorites">Favoritos</option>
+              <option value="blocked">Bloqueados</option>
+            </select>
+
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">Todos los tipos</option>
+              {availableTypes.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+
           <span className="result-count">
             {filteredPokemons.length} Pokémon encontrados
           </span>
