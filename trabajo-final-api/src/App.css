@@ -50,6 +50,78 @@ body {
   padding: 0 1rem 2rem;
 }
 
+.app-main {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.content-area {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.favorites-panel {
+  width: 300px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-left: 1px solid rgba(255,255,255,0.04);
+  padding: 1rem;
+  border-radius: 10px;
+  position: sticky;
+  top: 96px;
+  height: calc(100vh - 140px);
+  overflow: auto;
+}
+
+.favorites-panel h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.favorites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.favorite-item {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  background: rgba(255,255,255,0.02);
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.fav-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.fav-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.fav-name {
+  text-transform: capitalize;
+}
+
+.fav-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.no-favs {
+  color: var(--text-secondary);
+}
+
 .search-container {
   display: flex;
   gap: 1rem;

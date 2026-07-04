@@ -110,56 +110,82 @@ function App() {
       </header>
 
       <main className="app-main">
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Buscar Pokémon..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="search-input"
-          />
+        <div className="content-area">
+          <div className="search-container">
+            <input
+              type="text"
+              placeholder="Buscar Pokémon..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="search-input"
+            />
 
-          <div className="filter-controls">
-            <select
-              value={filterMode}
-              onChange={(e) => setFilterMode(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">Todos</option>
-              <option value="favorites">Favoritos</option>
-              <option value="blocked">Bloqueados</option>
-            </select>
+            <div className="filter-controls">
+              <select
+                value={filterMode}
+                onChange={(e) => setFilterMode(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">Todos</option>
+                <option value="favorites">Favoritos</option>
+                <option value="blocked">Bloqueados</option>
+              </select>
 
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="filter-select"
-            >
-              <option value="all">Todos los tipos</option>
-              {availableTypes.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">Todos los tipos</option>
+                {availableTypes.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            <span className="result-count">
+              {filteredPokemons.length} Pokémon encontrados
+            </span>
           </div>
 
-          <span className="result-count">
-            {filteredPokemons.length} Pokémon encontrados
-          </span>
+          {loading ? (
+            <div className="loading">
+              <p>Cargando Pokémon...</p>
+            </div>
+          ) : (
+            <PokemonList
+              pokemons={filteredPokemons}
+              favorites={favorites}
+              blocked={blocked}
+              onToggleFavorite={toggleFavorite}
+              onToggleBlocked={toggleBlocked}
+            />
+          )}
         </div>
 
-        {loading ? (
-          <div className="loading">
-            <p>Cargando Pokémon...</p>
+        <aside className="favorites-panel">
+          <h2>Favoritos</h2>
+          <div className="favorites-list">
+            {favorites.length === 0 && (
+              <p className="no-favs">No tienes Pokémon favoritos.</p>
+            )}
+
+            {favorites.map(id => {
+              const p = pokemons.find(x => x.id === id)
+              if (!p) return null
+              const imageUrl = p.sprites?.other?.['official-artwork']?.front_default || p.sprites?.front_default || 'https://via.placeholder.com/80'
+              return (
+                <div key={id} className="favorite-item">
+                  <img src={imageUrl} alt={p.name} className="fav-thumb" />
+                  <div className="fav-meta">
+                    <span className="fav-name">{p.name}</span>
+                    <button className="fav-remove" onClick={() => toggleFavorite(id)} title="Quitar favorito">✖</button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        ) : (
-          <PokemonList
-            pokemons={filteredPokemons}
-            favorites={favorites}
-            blocked={blocked}
-            onToggleFavorite={toggleFavorite}
-            onToggleBlocked={toggleBlocked}
-          />
-        )}
+        </aside>
       </main>
     </div>
   )
