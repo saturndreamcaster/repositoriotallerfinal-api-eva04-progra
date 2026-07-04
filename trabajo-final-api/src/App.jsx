@@ -206,6 +206,10 @@ function App() {
           </div>
         </aside>
       </main>
+
+      <footer className="app-footer">
+        <p>Matías Calderón</p>
+      </footer>
     </div>
   )
 }
