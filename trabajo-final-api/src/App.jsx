@@ -7,6 +7,7 @@ function App() {
   const [filteredPokemons, setFilteredPokemons] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
   const [favorites, setFavorites] = useState([])
   const [blocked, setBlocked] = useState([])
   const [filterMode, setFilterMode] = useState('all') // all | favorites | blocked
@@ -26,12 +27,19 @@ function App() {
     const fetchPokemons = async () => {
       try {
         setLoading(true)
+        setErrorMessage('')
         const response = await fetch('https://pokeapi.co/api/v2/pokemon?limit=50&offset=0')
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`)
+        }
         const data = await response.json()
         
         const pokemonDetails = await Promise.all(
           data.results.map(pokemon =>
-            fetch(pokemon.url).then(res => res.json())
+            fetch(pokemon.url).then(res => {
+              if (!res.ok) throw new Error(`HTTP ${res.status}`)
+              return res.json()
+            })
           )
         )
         
@@ -41,6 +49,7 @@ function App() {
         setAvailableTypes(types.sort())
       } catch (error) {
         console.error('Error al cargar Pokémon:', error)
+        setErrorMessage('No se pudo cargar la lista de Pokémon. Revisa tu conexión e intenta nuevamente.')
       } finally {
         setLoading(false)
       }
@@ -115,6 +124,21 @@ function App() {
 
       <main className="app-main">
         <div className="content-area">
+          <div className="stats-row">
+            <div className="stat-card">
+              <span className="stat-title">Totales</span>
+              <strong>{pokemons.length}</strong>
+            </div>
+            <div className="stat-card">
+              <span className="stat-title">Favoritos</span>
+              <strong>{favorites.length}</strong>
+            </div>
+            <div className="stat-card">
+              <span className="stat-title">Bloqueados</span>
+              <strong>{blocked.length}</strong>
+            </div>
+          </div>
+
           <div className="search-container">
             <input
               type="text"
@@ -122,6 +146,7 @@ function App() {
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="search-input"
+              disabled={loading || Boolean(errorMessage)}
             />
 
             <div className="filter-controls">
@@ -129,6 +154,7 @@ function App() {
                 value={filterMode}
                 onChange={(e) => setFilterMode(e.target.value)}
                 className="filter-select"
+                disabled={loading || Boolean(errorMessage)}
               >
                 <option value="all">Todos</option>
                 <option value="favorites">Favoritos</option>
@@ -139,6 +165,7 @@ function App() {
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="filter-select"
+                disabled={loading || Boolean(errorMessage)}
               >
                 <option value="all">Todos los tipos</option>
                 {availableTypes.map(t => (
@@ -155,6 +182,10 @@ function App() {
           {loading ? (
             <div className="loading">
               <p>Cargando Pokémon...</p>
+            </div>
+          ) : errorMessage ? (
+            <div className="error-message">
+              <p>{errorMessage}</p>
             </div>
           ) : (
             <PokemonList
