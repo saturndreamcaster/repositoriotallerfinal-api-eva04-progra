@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import PokemonList from './components/PokemonList'
+import useLocalStorageState from './hooks/useLocalStorageState'
 
 function App() {
   const [pokemons, setPokemons] = useState([])
@@ -8,19 +9,11 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
-  const [favorites, setFavorites] = useState([])
-  const [blocked, setBlocked] = useState([])
+  const [favorites, setFavorites] = useLocalStorageState('pokemonFavorites', [])
+  const [blocked, setBlocked] = useLocalStorageState('pokemonBlocked', [])
   const [filterMode, setFilterMode] = useState('all') // all | favorites | blocked
   const [typeFilter, setTypeFilter] = useState('all')
   const [availableTypes, setAvailableTypes] = useState([])
-
-  // Cargar datos guardados del localStorage
-  useEffect(() => {
-    const savedFavorites = JSON.parse(localStorage.getItem('pokemonFavorites')) || []
-    const savedBlocked = JSON.parse(localStorage.getItem('pokemonBlocked')) || []
-    setFavorites(savedFavorites)
-    setBlocked(savedBlocked)
-  }, [])
 
   // Cargar Pokémon desde la API
   useEffect(() => {
@@ -81,15 +74,6 @@ function App() {
 
     setFilteredPokemons(filtered)
   }, [searchTerm, pokemons, blocked, favorites, filterMode, typeFilter])
-
-  // Guardar cambios en localStorage
-  useEffect(() => {
-    localStorage.setItem('pokemonFavorites', JSON.stringify(favorites))
-  }, [favorites])
-
-  useEffect(() => {
-    localStorage.setItem('pokemonBlocked', JSON.stringify(blocked))
-  }, [blocked])
 
   const toggleFavorite = (pokemonId) => {
     setFavorites(prev =>
