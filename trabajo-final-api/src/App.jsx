@@ -91,11 +91,15 @@ function App() {
   }
 
   const toggleBlocked = (pokemonId) => {
-    setBlocked(prev =>
-      prev.includes(pokemonId)
-        ? prev.filter(id => id !== pokemonId)
-        : [...prev, pokemonId]
-    )
+    setBlocked(prev => {
+      if (prev.includes(pokemonId)) {
+        return prev.filter(id => id !== pokemonId)
+      }
+
+      // Si vamos a bloquear, también removemos de favoritos si estaba
+      setFavorites(favPrev => favPrev.filter(id => id !== pokemonId))
+      return [...prev, pokemonId]
+    })
   }
 
   const handleSearch = (value) => {
